@@ -542,7 +542,8 @@ def destroy_disk_metadata(dev, node_uuid):
     # This is the same bug as
     # https://bugs.launchpad.net/ironic-python-agent/+bug/1737556
 
-    sector_size = get_dev_sector_size(dev)
+    #sector_size = get_dev_sector_size(dev)
+    sector_size = 4096
     # https://uefi.org/specs/UEFI/2.10/05_GUID_Partition_Table_Format.html If
     # the block size is 512, the First Usable LBA must be greater than or equal
     # to 34 [...] if the logical block size is 4096, the First Usable LBA must
@@ -559,7 +560,7 @@ def destroy_disk_metadata(dev, node_uuid):
     dev_size = get_dev_byte_size(dev)
     if dev_size < gpt_sectors * sector_size:
         dd_count = 'count=%s' % int(dev_size / sector_size)
-    utils.execute('dd', dd_bs, 'if=/dev/zero', dd_device, dd_count,
+    utils.execute('dd', 'bs=4096', 'if=/dev/zero', dd_device, dd_count,
                   'oflag=direct', use_standard_locale=True)
 
     # Overwrite the Secondary GPT, do this only if there could be one
@@ -567,7 +568,7 @@ def destroy_disk_metadata(dev, node_uuid):
         gpt_backup = int(dev_size / sector_size - gpt_sectors)
         dd_seek = 'seek=%i' % gpt_backup
         dd_count = 'count=%s' % gpt_sectors
-        utils.execute('dd', dd_bs, 'if=/dev/zero', dd_device, dd_count,
+        utils.execute('dd', 'bs=4096', 'if=/dev/zero', dd_device, dd_count,
                       'oflag=direct', dd_seek, use_standard_locale=True)
 
     # Go ahead and let sgdisk run as well.
